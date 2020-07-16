@@ -1,7 +1,4 @@
-provider "aws" {
-  region = "ap-south-1"
-  profile = "default"
-}
+
 
 resource "aws_security_group" "my_security_group" {
   name        = "taskSG2"
@@ -75,69 +72,63 @@ resource "aws_efs_file_system" "shndefs" {
 }
 
 //mount
-resource "aws_efs_mount_target" "mountefs" {
+resource "aws_efs_mount_target" "nullremote3" {
   file_system_id  = aws_efs_file_system.shndefs.id
-  subnet_id       = "subnet-8e8184e6"
-  security_groups = ["${aws_security_group.allow_tls.id}",]
+  subnet_id = "subnet-44073d2c"
+  security_groups = [aws_security_group.my_security_group.id]
 }
 
 // Configure the external volume
+// Configuring the external volume
 resource "null_resource" "setupVol" {
   depends_on = [
-    aws_efs_mount_target.mountefs,
+    aws_efs_mount_target.nullremote3,
   ]
 
 
-
-
-
-resource "null_resource" "nulllocal2"  {
-	provisioner "local-exec" {
-	    command = "echo  ${aws_instance.web.public_ip} > publicip.txt"
-  	}
-}
-
-
-
-resource "null_resource" "nullremote3"  {
-
-depends_on = [
-    aws_volume_attachment.ebs_att,
-  ]
-
-
-  connection {
+connection {
     type     = "ssh"
     user     = "ec2-user"
     private_key = file("D:/awscloud/Mainkey.pem")
     host     = aws_instance.shndweb.public_ip
   }
 
-provisioner "remote-exec" {
-    inline = [
-      "sudo mkfs.ext4  /dev/xvdf",
-      "sudo mount  /dev/xvdh  /var/www/html",
-      "sudo rm -rf /var/www/html/*",
-      "sudo git clone https://github.com/Harsh-Gupta9897/Task2.git /var/www/html/"
-    ]
-  }
+provisioner "remote-exec"{
+   
+       inline = [
+         
+          "sudo yum install httpd php git -y",
+	        "sudo systemctl start httpd",
+	        "sudo systemctl enable httpd",
+          "sudo mkfs.ext4  /dev/xvdf",
+          "sudo rm -rf /var/www/html/*",
+          "sudo mount  /dev/xvdf  /var/www/html",
+          "sudo git clone https://github.com/Harsh-Gupta9897/task2.git /html_repo",
+	        "sudo cp -r /html_repo/* /var/www/html",
+	        "sudo rm -rf /html_repo"
+         ]
+
+    }
 }
+
+
+
+
+resource "null_resource" "nulllocal2"  {
+	provisioner "local-exec" {
+	    command = "echo  ${aws_instance.shndweb.public_ip} > publicip.txt"
+  	}
+}
+
+
+
+
 
 
 output "myos_ip" {
   value = aws_instance.shndweb.public_ip
 }
 
-resource "null_resource" "nulllocal1"  {
 
-
-depends_on = [
-    null_resource.nullremote3,
-  ]
-
-	provisioner "local-exec" {
-	    command = "chrome  ${aws_instance.shndweb.public_ip}"
-  	}
-}
 
 
