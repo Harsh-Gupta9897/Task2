@@ -36,7 +36,7 @@ resource "aws_security_group" "my_security_group" {
 resource "aws_instance" "shndweb" {
   ami           = "ami-0447a12f28fddb066"
   instance_type = "t2.micro"
-  key_name = "MainKey"
+  key_name = "Mainkey"
   security_groups = [ aws_security_group.my_security_group.id ]
   subnet_id = "subnet-44073d2c"
 
